@@ -18,7 +18,7 @@ import org.workcraft.workspace.WorkspaceEntry;
 import static org.workcraft.plugins.cflt.utils.EdgeCliqueCoverUtils.getEdgeCliqueCover;
 import static org.workcraft.plugins.cflt.utils.GraphUtils.SPECIAL_CLONE_CHARACTER;
 
-public class PetriDrawingTool {
+public class PetriDrawingTool implements VisualModelDrawingTool {
     private final Map<String, VisualTransition> transitionNameToVisualTransition = new HashMap<>();
     private final NodeCollection nodeCollection;
 
@@ -26,17 +26,18 @@ public class PetriDrawingTool {
         this.nodeCollection = nodeCollection;
     }
 
-    public void drawPetri(Graph inputGraph, Graph outputGraph,
+    public void drawVisualObjects(Graph inputGraph, Graph outputGraph,
             boolean isSequence, boolean isRoot, Mode mode, WorkspaceEntry we) {
-        VisualPetri visualPetri = WorkspaceUtils.getAs(we, VisualPetri.class);
         var edgeCliqueCover = getEdgeCliqueCover(inputGraph, outputGraph, isSequence, mode);
-
         List<String> vertexNames = isSequence
                 ? inputGraph.getVertexNames()
                 : new ArrayList<>();
         HashSet<String> inputVertexNames = new HashSet<>(vertexNames);
 
-        this.drawIsolatedVisualObjects(inputGraph, visualPetri, isSequence, isRoot);
+        VisualPetri visualPetri = WorkspaceUtils.getAs(we, VisualPetri.class);
+        if (inputGraph.getIsolatedVertices() != null) {
+            this.drawIsolatedVisualObjects(inputGraph, visualPetri, isSequence, isRoot);
+        }
         this.drawRemainingVisualObjects(edgeCliqueCover, visualPetri, inputVertexNames, isRoot);
     }
 
@@ -76,28 +77,26 @@ public class PetriDrawingTool {
     }
 
     private void drawIsolatedVisualObjects(Graph inputGraph, VisualPetri visualPetri, boolean isSequence, boolean isRoot) {
-        if (inputGraph.getIsolatedVertices() != null) {
-            for (String vertexName : inputGraph.getIsolatedVertices()) {
-                boolean isTransitionNamePresent = transitionNameToVisualTransition.containsKey(vertexName);
+        for (String vertexName : inputGraph.getIsolatedVertices()) {
+            boolean isTransitionNamePresent = transitionNameToVisualTransition.containsKey(vertexName);
 
-                VisualPlace visualPlace = null;
-                if (!isTransitionNamePresent && !isSequence) {
-                    visualPlace = createVisualPlace(visualPetri, true, Positioning.LEFT);
-                } else if (isRoot) {
-                    visualPlace = createVisualPlace(visualPetri, true, Positioning.TOP);
-                }
+            VisualPlace visualPlace = null;
+            if (!isTransitionNamePresent && !isSequence) {
+                visualPlace = createVisualPlace(visualPetri, true, Positioning.LEFT);
+            } else if (isRoot) {
+                visualPlace = createVisualPlace(visualPetri, true, Positioning.TOP);
+            }
 
-                VisualTransition visualTransition = null;
-                if (!isTransitionNamePresent && !isSequence) {
-                    visualTransition = createVisualTransition(visualPetri, vertexName);
-                } else if (isRoot) {
-                    visualTransition = transitionNameToVisualTransition.get(vertexName);
-                }
+            VisualTransition visualTransition = null;
+            if (!isTransitionNamePresent && !isSequence) {
+                visualTransition = createVisualTransition(visualPetri, vertexName);
+            } else if (isRoot) {
+                visualTransition = transitionNameToVisualTransition.get(vertexName);
+            }
 
-                if (visualPlace != null && visualTransition != null) {
-                    transitionNameToVisualTransition.put(vertexName, visualTransition);
-                    connectVisualPlaceAndVisualTransition(visualPetri, visualPlace, visualTransition, ConnectionDirection.PLACE_TO_TRANSITION);
-                }
+            if (visualPlace != null && visualTransition != null) {
+                transitionNameToVisualTransition.put(vertexName, visualTransition);
+                connectVisualPlaceAndVisualTransition(visualPetri, visualPlace, visualTransition, ConnectionDirection.PLACE_TO_TRANSITION);
             }
         }
     }
