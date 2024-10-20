@@ -16,7 +16,7 @@ import org.workcraft.utils.LogUtils;
 import org.workcraft.workspace.WorkspaceEntry;
 
 import static org.workcraft.plugins.cflt.utils.EdgeCliqueCoverUtils.getEdgeCliqueCover;
-import static org.workcraft.plugins.cflt.utils.GraphUtils.SPECIAL_CLONE_CHARACTER;
+import static org.workcraft.plugins.cflt.utils.GraphUtils.getCleanVertexName;
 
 public class PetriDrawingTool implements VisualModelDrawingTool {
     private final Map<String, VisualTransition> transitionNameToVisualTransition = new HashMap<>();
@@ -55,10 +55,9 @@ public class PetriDrawingTool implements VisualModelDrawingTool {
             VisualPlace visualPlace = createVisualPlace(visualPetri, isRoot, Positioning.LEFT);
 
             for (String vertexName : clique.getVertexNames()) {
-                boolean isClone = vertexName.contains(SPECIAL_CLONE_CHARACTER);
-                String cleanVertexName = isClone
-                        ? vertexName.split(SPECIAL_CLONE_CHARACTER, 2)[0]
-                        : vertexName;
+                var getCleanVertexNameResponse = getCleanVertexName(vertexName);
+                String cleanVertexName = getCleanVertexNameResponse.vertexName();
+                boolean isClone = getCleanVertexNameResponse.isClone();
                 boolean isTransitionPresent = transitionNameToVisualTransition.containsKey(cleanVertexName);
 
                 VisualTransition visualTransition = isTransitionPresent

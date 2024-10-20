@@ -19,7 +19,7 @@ import org.workcraft.workspace.WorkspaceEntry;
 import java.util.*;
 
 import static org.workcraft.plugins.cflt.utils.EdgeCliqueCoverUtils.getEdgeCliqueCover;
-import static org.workcraft.plugins.cflt.utils.GraphUtils.SPECIAL_CLONE_CHARACTER;
+import static org.workcraft.plugins.cflt.utils.GraphUtils.getCleanVertexName;
 
 public class StgDrawingTool implements VisualModelDrawingTool {
     private final Map<String, VisualSignalTransition> transitionNameToVisualTransition = new HashMap<>();
@@ -58,10 +58,9 @@ public class StgDrawingTool implements VisualModelDrawingTool {
             VisualStgPlace visualStgPlace = createVisualStgPlace(visualStg, isRoot, Positioning.LEFT);
 
             for (String vertexName : clique.getVertexNames()) {
-                boolean isClone = vertexName.contains(SPECIAL_CLONE_CHARACTER);
-                String cleanVertexName = isClone
-                        ? vertexName.split(SPECIAL_CLONE_CHARACTER, 2)[0]
-                        : vertexName;
+                var getCleanVertexNameResponse = getCleanVertexName(vertexName);
+                String cleanVertexName = getCleanVertexNameResponse.vertexName();
+                boolean isClone = getCleanVertexNameResponse.isClone();
                 boolean isTransitionPresent = transitionNameToVisualTransition.containsKey(cleanVertexName);
 
                 VisualSignalTransition visualSignalTransition = isTransitionPresent
